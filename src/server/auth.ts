@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { config } from "../config.js";
+import { safeTokenEquals } from "../security/tokens.js";
 
 function bearerToken(req: Request) {
   const header = req.header("authorization") ?? "";
@@ -8,7 +9,7 @@ function bearerToken(req: Request) {
 
 export function requireHermesToolToken(req: Request, res: Response, next: NextFunction) {
   const token = bearerToken(req) ?? req.header("x-hermes-token");
-  if (token !== config.HERMES_TOOL_TOKEN) {
+  if (!safeTokenEquals(token, config.HERMES_TOOL_TOKEN)) {
     res.status(401).json({ error: "unauthorized" });
     return;
   }
@@ -16,8 +17,8 @@ export function requireHermesToolToken(req: Request, res: Response, next: NextFu
 }
 
 export function requireDashboardToken(req: Request, res: Response, next: NextFunction) {
-  const token = bearerToken(req) ?? req.header("x-dashboard-token") ?? String(req.query.token ?? "");
-  if (token !== config.DASHBOARD_TOKEN) {
+  const token = bearerToken(req) ?? req.header("x-dashboard-token");
+  if (!safeTokenEquals(token, config.DASHBOARD_TOKEN)) {
     res.status(401).json({ error: "unauthorized" });
     return;
   }

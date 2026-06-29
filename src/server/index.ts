@@ -23,8 +23,10 @@ app.use((error: unknown, _req: express.Request, res: express.Response, _next: ex
   res.status(500).json({ error: message });
 });
 
-await ensureOwnerProfile();
-
 app.listen(config.PORT, () => {
   logger.info({ port: config.PORT, baseUrl: config.APP_BASE_URL }, "exec assistant companion started");
+});
+
+ensureOwnerProfile().catch((error) => {
+  logger.error({ error }, "failed to ensure owner profile");
 });

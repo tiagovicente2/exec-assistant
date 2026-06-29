@@ -3,6 +3,8 @@ import { DateTime } from "luxon";
 import { config, ownerProfileId } from "../config.js";
 import { supabase } from "./supabase.js";
 import { decryptSecret, encryptSecret } from "../security/crypto.js";
+import { createSignedState, verifySignedState } from "../security/tokens.js";
+import { ensureOwnerProfile } from "../domain/profile.js";
 
 const scopes = ["https://www.googleapis.com/auth/calendar.events", "https://www.googleapis.com/auth/tasks"];
 
@@ -22,11 +24,14 @@ export function googleAuthUrl() {
     access_type: "offline",
     prompt: "consent",
     scope: scopes,
-    state: "owner"
+    state: createSignedState()
   });
 }
 
-export async function storeGoogleCallback(code: string) {
+export async function storeGoogleCallback(code: string, state: string | undefined) {
+  if (!verifySignedState(state)) throw new Error("Invalid Google OAuth state");
+  await ensureOwnerProfile();
+
   const client = oauthClient();
   const { tokens } = await client.getToken(code);
   if (!tokens.refresh_token && !tokens.access_token) throw new Error("Google did not return OAuth tokens");

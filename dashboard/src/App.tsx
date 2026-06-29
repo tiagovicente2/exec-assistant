@@ -43,7 +43,10 @@ type DashboardData = {
 function tokenFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const token = params.get("token");
-  if (token) localStorage.setItem("exec-dashboard-token", token);
+  if (token) {
+    localStorage.setItem("exec-dashboard-token", token);
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
   return token ?? localStorage.getItem("exec-dashboard-token") ?? "";
 }
 
@@ -102,7 +105,16 @@ function App() {
           <h1>Today's command center</h1>
           <p>{data ? `${data.date} · ${data.timezone}` : "Loading your day..."}</p>
         </div>
-        <a className="connect" href={`/oauth/google/start?token=${encodeURIComponent(token)}`}>Connect Google</a>
+        <button
+          className="connect"
+          onClick={async () => {
+            const response = await fetch("/api/google/auth-url", { headers: { "x-dashboard-token": token } });
+            const payload = (await response.json()) as { url?: string };
+            if (payload.url) window.location.href = payload.url;
+          }}
+        >
+          Connect Google
+        </button>
       </header>
 
       {loading && <div className="notice">Loading dashboard...</div>}

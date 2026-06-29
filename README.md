@@ -2,7 +2,7 @@
 
 Hermes Agent companion service for a personal WhatsApp assistant.
 
-Hermes handles the agent runtime, WhatsApp gateway, LLM provider, memory loop, skills, and scheduled automations. This app provides the structured personal-assistant layer Hermes can call: goals, reminders, Google Calendar, Google Tasks, and a dashboard at `https://exec.arppg.io`.
+Hermes handles the agent runtime, WhatsApp gateway, LLM provider, memory loop, skills, and scheduled automations. This app provides the structured personal-assistant layer Hermes can call: goals, reminders, Google Calendar, Google Tasks, and a dashboard at `https://exec.arpgg.io`.
 
 ## Stack
 
@@ -17,10 +17,10 @@ Hermes handles the agent runtime, WhatsApp gateway, LLM provider, memory loop, s
 
 1. Create self-hosted Supabase in Coolify.
 2. Run `supabase/schema.sql` in the Supabase SQL editor.
-3. Create Google OAuth credentials with callback `https://exec.arppg.io/oauth/google/callback`.
+3. Create Google OAuth credentials with callback `https://exec.arpgg.io/oauth/google/callback`.
 4. Copy `.env.example` values into Coolify environment variables.
 5. Deploy this app with the Dockerfile.
-6. Visit `https://exec.arppg.io?token=<DASHBOARD_TOKEN>` for the dashboard.
+6. Visit `https://exec.arpgg.io?token=<DASHBOARD_TOKEN>` for the dashboard.
 7. Click `Connect Google` from the dashboard and complete OAuth.
 8. Install/configure Hermes Agent separately and add `hermes/exec-assistant-skill.md` as a Hermes skill/context file.
 
@@ -44,7 +44,7 @@ WhatsApp is handled by Hermes, not this companion app.
 Add these to Hermes' runtime environment:
 
 ```bash
-export EXEC_ASSISTANT_URL="https://exec.arppg.io"
+export EXEC_ASSISTANT_URL="https://exec.arpgg.io"
 export EXEC_ASSISTANT_TOKEN="same value as HERMES_TOOL_TOKEN"
 ```
 
@@ -57,7 +57,7 @@ Core endpoints are under `/api/tools` and require `Authorization: Bearer <HERMES
 Open:
 
 ```text
-https://exec.arppg.io?token=<DASHBOARD_TOKEN>
+https://exec.arpgg.io?token=<DASHBOARD_TOKEN>
 ```
 
 The dashboard shows:

@@ -22,10 +22,18 @@ router.get("/oauth/google/start", requireDashboardToken, (_req, res, next) => {
   }
 });
 
+router.get("/api/google/auth-url", requireDashboardToken, (_req, res, next) => {
+  try {
+    res.json({ url: googleAuthUrl() });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get("/oauth/google/callback", async (req, res, next) => {
   try {
     const code = z.string().min(1).parse(req.query.code);
-    await storeGoogleCallback(code);
+    await storeGoogleCallback(code, typeof req.query.state === "string" ? req.query.state : undefined);
     res.type("html").send("<h1>Google connected</h1><p>You can close this tab.</p>");
   } catch (error) {
     next(error);

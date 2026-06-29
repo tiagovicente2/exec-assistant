@@ -66,3 +66,25 @@ create table if not exists google_tokens (
 create index if not exists goals_profile_status_idx on goals(profile_id, status);
 create index if not exists reminders_due_idx on reminders(profile_id, status, remind_at);
 create index if not exists memories_profile_kind_idx on memories(profile_id, kind);
+create index if not exists conversation_messages_profile_id_idx on conversation_messages(profile_id);
+
+alter table profiles enable row level security;
+alter table goals enable row level security;
+alter table reminders enable row level security;
+alter table memories enable row level security;
+alter table conversation_messages enable row level security;
+alter table google_tokens enable row level security;
+
+revoke all on table profiles from anon, authenticated;
+revoke all on table goals from anon, authenticated;
+revoke all on table reminders from anon, authenticated;
+revoke all on table memories from anon, authenticated;
+revoke all on table conversation_messages from anon, authenticated;
+revoke all on table google_tokens from anon, authenticated;
+
+create policy profiles_deny_client_access on profiles for all to anon, authenticated using (false) with check (false);
+create policy goals_deny_client_access on goals for all to anon, authenticated using (false) with check (false);
+create policy reminders_deny_client_access on reminders for all to anon, authenticated using (false) with check (false);
+create policy memories_deny_client_access on memories for all to anon, authenticated using (false) with check (false);
+create policy conversation_messages_deny_client_access on conversation_messages for all to anon, authenticated using (false) with check (false);
+create policy google_tokens_deny_client_access on google_tokens for all to anon, authenticated using (false) with check (false);

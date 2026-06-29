@@ -1,7 +1,10 @@
 import { ownerProfileId } from "../config.js";
 import { supabase } from "../integrations/supabase.js";
+import { ensureOwnerProfile } from "./profile.js";
 
 export async function saveMemory(input: { kind?: string; content: string; importance?: number; sourceMessageId?: string }) {
+  await ensureOwnerProfile();
+
   const { data, error } = await supabase
     .from("memories")
     .insert({

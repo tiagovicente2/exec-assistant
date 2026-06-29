@@ -1,8 +1,11 @@
 import { DateTime } from "luxon";
 import { config, ownerProfileId } from "../config.js";
 import { supabase } from "../integrations/supabase.js";
+import { ensureOwnerProfile } from "./profile.js";
 
 export async function createReminder(input: { message: string; remindAt: string; recurrenceRule?: string }) {
+  await ensureOwnerProfile();
+
   const remindAt = DateTime.fromISO(input.remindAt, { zone: config.DEFAULT_TIMEZONE });
   if (!remindAt.isValid) throw new Error("Invalid reminder date");
 

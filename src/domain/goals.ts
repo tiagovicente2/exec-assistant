@@ -1,7 +1,10 @@
 import { ownerProfileId } from "../config.js";
 import { supabase } from "../integrations/supabase.js";
+import { ensureOwnerProfile } from "./profile.js";
 
 export async function createGoal(input: { title: string; description?: string; targetDate?: string; progress?: number }) {
+  await ensureOwnerProfile();
+
   const { data, error } = await supabase
     .from("goals")
     .insert({

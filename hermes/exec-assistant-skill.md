@@ -7,7 +7,7 @@ Use this skill when Tiago asks through WhatsApp/Hermes to manage goals, Google C
 Set these in the Hermes environment or skill wrapper:
 
 ```bash
-export EXEC_ASSISTANT_URL="https://exec.arppg.io"
+export EXEC_ASSISTANT_URL="https://exec.arpgg.io"
 export EXEC_ASSISTANT_TOKEN="same value as HERMES_TOOL_TOKEN"
 ```
 

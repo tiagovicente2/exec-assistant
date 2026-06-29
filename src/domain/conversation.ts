@@ -1,7 +1,10 @@
 import { ownerProfileId } from "../config.js";
 import { supabase } from "../integrations/supabase.js";
+import { ensureOwnerProfile } from "./profile.js";
 
 export async function saveConversationMessage(input: { whatsappMessageId?: string; role: "user" | "assistant"; content: string }) {
+  await ensureOwnerProfile();
+
   const { error } = await supabase.from("conversation_messages").insert({
     profile_id: ownerProfileId,
     whatsapp_message_id: input.whatsappMessageId ?? null,
