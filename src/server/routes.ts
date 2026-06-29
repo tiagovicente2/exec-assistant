@@ -5,7 +5,7 @@ import { createGoal, listGoals, updateGoal } from "../domain/goals.js";
 import { saveMemory, searchMemories } from "../domain/memory.js";
 import { cancelReminder, createReminder, dueReminders, listReminders, markReminderSent } from "../domain/reminders.js";
 import { todayOverview } from "../domain/overview.js";
-import { upsertDashboardSnapshot } from "../domain/dashboardSnapshot.js";
+import { removeTodaySnapshotTask, updateTodaySnapshotTask, upsertDashboardSnapshot } from "../domain/dashboardSnapshot.js";
 import { requireDashboardToken, requireHermesToolToken } from "./auth.js";
 
 const router = express.Router();
@@ -17,6 +17,51 @@ router.get("/health", (_req, res) => {
 router.get("/api/dashboard", requireDashboardToken, async (_req, res, next) => {
   try {
     res.json(await todayOverview());
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch("/api/dashboard/goals/:id", requireDashboardToken, async (req, res, next) => {
+  try {
+    const body = z.object({ status: z.string().optional(), progress: z.number().min(0).max(100).optional() }).parse(req.body);
+    res.json(await updateGoal({ id: req.params.id, ...body }));
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/api/dashboard/reminders/:id/sent", requireDashboardToken, async (req, res, next) => {
+  try {
+    await markReminderSent(req.params.id);
+    res.json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/api/dashboard/reminders/:id", requireDashboardToken, async (req, res, next) => {
+  try {
+    res.json(await cancelReminder(req.params.id));
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch("/api/dashboard/tasks/:index", requireDashboardToken, async (req, res, next) => {
+  try {
+    const index = Number.parseInt(req.params.index, 10);
+    const body = z.object({ status: z.literal("completed") }).parse(req.body);
+    res.json(await updateTodaySnapshotTask(index, { status: body.status, completed: new Date().toISOString() }));
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/api/dashboard/tasks/:index", requireDashboardToken, async (req, res, next) => {
+  try {
+    const index = Number.parseInt(req.params.index, 10);
+    res.json(await removeTodaySnapshotTask(index));
   } catch (error) {
     next(error);
   }

@@ -9,7 +9,11 @@ export async function todayOverview() {
   const [goals, reminders, snapshot] = await Promise.all([listGoals("active"), listReminders("scheduled"), getTodaySnapshot()]);
   const dueReminders = reminders.filter((reminder) => DateTime.fromISO(reminder.remind_at) <= now.endOf("day"));
   const calendarEvents = (snapshot?.calendar_events as unknown[] | null) ?? [];
-  const tasks = (snapshot?.tasks as unknown[] | null) ?? [];
+  const tasks = ((snapshot?.tasks as unknown[] | null) ?? []).filter((task) => {
+    if (!task || typeof task !== "object" || Array.isArray(task)) return true;
+    const item = task as Record<string, unknown>;
+    return item.status !== "completed" && !item.completed && item.hidden !== true;
+  });
 
   const highlights = [
     `${calendarEvents.length} calendar event${calendarEvents.length === 1 ? "" : "s"} today`,

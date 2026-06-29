@@ -49,6 +49,9 @@ h2 { margin-bottom: 0; font-size: 1.1rem; }
   cursor: pointer;
 }
 
+button:disabled { cursor: wait; opacity: 0.58; }
+button.secondary { background: #efe5c9; }
+
 .connect.passive {
   cursor: default;
   background: rgba(232, 210, 123, 0.28);
@@ -107,6 +110,16 @@ h2 { margin-bottom: 0; font-size: 1.1rem; }
   padding: 13px 0;
   border-top: 1px solid rgba(24, 32, 21, 0.08);
 }
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.actions.compact { margin-top: 0; }
+.actions.compact button { padding: 8px 12px; }
 
 .notice {
   margin: 16px 0;

@@ -27,6 +27,8 @@ type Task = {
   id?: string;
   title?: string;
   due?: string;
+  status?: string;
+  completed?: string;
 };
 
 type DashboardData = {
@@ -62,18 +64,43 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  async function loadDashboard(currentToken: string) {
+    if (!currentToken) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/dashboard", { headers: { "x-dashboard-token": currentToken } });
+      if (!response.ok) throw new Error(await response.text());
+      setData(await response.json());
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Failed to load dashboard");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function runAction(method: string, url: string, body?: unknown) {
+    if (!token) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: { "x-dashboard-token": token, "Content-Type": "application/json" },
+        body: body === undefined ? undefined : JSON.stringify(body)
+      });
+      if (!response.ok) throw new Error(await response.text());
+      await loadDashboard(token);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Action failed");
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (!token) return;
     localStorage.setItem("exec-dashboard-token", token);
-    setLoading(true);
-    fetch("/api/dashboard", { headers: { "x-dashboard-token": token } })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(await response.text());
-        return response.json();
-      })
-      .then(setData)
-      .catch((caught: Error) => setError(caught.message))
-      .finally(() => setLoading(false));
+    void loadDashboard(token);
   }, [token]);
 
   if (!token) {
@@ -140,6 +167,9 @@ function App() {
                     </div>
                     <div className="bar"><span style={{ width: `${goal.progress}%` }} /></div>
                     {goal.target_date && <p className="muted">Target: {goal.target_date}</p>}
+                    <div className="actions">
+                      <button disabled={loading} onClick={() => void runAction("PATCH", `/api/dashboard/goals/${goal.id}`, { status: "done", progress: 100 })}>Complete</button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -159,10 +189,14 @@ function App() {
             <article className="panel">
               <div className="panel-title"><h2>Tasks</h2><span>Google Tasks</span></div>
               {data.tasks.length === 0 && <p className="muted">No open tasks found.</p>}
-              {data.tasks.map((task) => (
+              {data.tasks.map((task, index) => (
                 <div className="line-item" key={task.id ?? task.title}>
                   <span>{task.title ?? "Untitled task"}</span>
                   {task.due && <time>{new Date(task.due).toLocaleDateString()}</time>}
+                  <div className="actions compact">
+                    <button disabled={loading} onClick={() => void runAction("PATCH", `/api/dashboard/tasks/${index}`, { status: "completed" })}>Done</button>
+                    <button className="secondary" disabled={loading} onClick={() => void runAction("DELETE", `/api/dashboard/tasks/${index}`)}>Remove</button>
+                  </div>
                 </div>
               ))}
             </article>
@@ -174,6 +208,10 @@ function App() {
                 <div className="line-item" key={reminder.id}>
                   <time>{formatTime(reminder.remind_at)}</time>
                   <span>{reminder.message}</span>
+                  <div className="actions compact">
+                    <button disabled={loading} onClick={() => void runAction("POST", `/api/dashboard/reminders/${reminder.id}/sent`)}>Done</button>
+                    <button className="secondary" disabled={loading} onClick={() => void runAction("DELETE", `/api/dashboard/reminders/${reminder.id}`)}>Remove</button>
+                  </div>
                 </div>
               ))}
             </article>
