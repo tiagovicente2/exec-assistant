@@ -32,12 +32,13 @@ type Task = {
 type DashboardData = {
   date: string;
   timezone: string;
-  google: { connected: boolean; error: string | null };
+  google: { connected: boolean; error: string | null; source?: string; syncedAt?: string | null };
   highlights: string[];
   goals: Goal[];
   reminders: Reminder[];
   calendarEvents: CalendarEvent[];
   tasks: Task[];
+  notes?: string | null;
 };
 
 function tokenFromUrl() {
@@ -105,16 +106,7 @@ function App() {
           <h1>Today's command center</h1>
           <p>{data ? `${data.date} · ${data.timezone}` : "Loading your day..."}</p>
         </div>
-        <button
-          className="connect"
-          onClick={async () => {
-            const response = await fetch("/api/google/auth-url", { headers: { "x-dashboard-token": token } });
-            const payload = (await response.json()) as { url?: string };
-            if (payload.url) window.location.href = payload.url;
-          }}
-        >
-          Connect Google
-        </button>
+        <div className="connect passive">Google via Hermes</div>
       </header>
 
       {loading && <div className="notice">Loading dashboard...</div>}
@@ -128,6 +120,9 @@ function App() {
               <article className="highlight" key={item}>{item}</article>
             ))}
           </section>
+
+          {data.google.syncedAt && <div className="notice">Calendar/tasks synced by Hermes at {new Date(data.google.syncedAt).toLocaleString()}</div>}
+          {data.notes && <div className="notice">{data.notes}</div>}
 
           <section className="grid">
             <article className="panel wide">

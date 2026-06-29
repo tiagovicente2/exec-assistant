@@ -11,10 +11,7 @@ const schema = z.object({
   DASHBOARD_TOKEN: z.string().min(20),
   HERMES_TOOL_TOKEN: z.string().min(20),
   SUPABASE_URL: z.string().url(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
-  GOOGLE_CLIENT_ID: z.string().optional(),
-  GOOGLE_CLIENT_SECRET: z.string().optional(),
-  GOOGLE_REDIRECT_URI: z.string().url().optional()
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1)
 });
 
 export const config = schema.parse(process.env);

@@ -49,6 +49,12 @@ h2 { margin-bottom: 0; font-size: 1.1rem; }
   cursor: pointer;
 }
 
+.connect.passive {
+  cursor: default;
+  background: rgba(232, 210, 123, 0.28);
+  color: #f7f3e8;
+}
+
 .highlights {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

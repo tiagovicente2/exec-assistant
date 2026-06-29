@@ -48,7 +48,15 @@ export EXEC_ASSISTANT_URL="https://exec.arpgg.io"
 export EXEC_ASSISTANT_TOKEN="same value as HERMES_TOOL_TOKEN"
 ```
 
-Then add `hermes/exec-assistant-skill.md` to Hermes as a skill or persistent context. Hermes can call the companion API with `curl` from that skill.
+Then install `skills/exec-assistant/SKILL.md` into Hermes. Hermes can call the companion API with `curl` from that skill.
+
+If Hermes can access this GitHub repo, install it with:
+
+```bash
+hermes skills install tiagovicente2/exec-assistant/skills/exec-assistant --force
+```
+
+Or copy `skills/exec-assistant/SKILL.md` into `~/.hermes/skills/exec-assistant/SKILL.md` inside the Hermes home volume.
 
 Core endpoints are under `/api/tools` and require `Authorization: Bearer <HERMES_TOOL_TOKEN>`.
 

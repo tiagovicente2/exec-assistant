@@ -1,6 +1,6 @@
 # Exec Assistant Skill
 
-Use this skill when Tiago asks through WhatsApp/Hermes to manage goals, Google Calendar, Google Tasks, reminders, memories, or day overview.
+Use this skill when Tiago asks through WhatsApp/Hermes to manage goals, reminders, memories, or day overview. Use Hermes' built-in Google Workspace skill for Google Calendar through `$GAPI calendar ...`.
 
 ## Environment
 
@@ -13,7 +13,8 @@ export EXEC_ASSISTANT_TOKEN="same value as HERMES_TOOL_TOKEN"
 
 ## Rules
 
-- Use the companion API for durable actions.
+- Use the companion API for durable goals, reminders, memories, and dashboard snapshots.
+- Use `$GAPI calendar ...` for Calendar actions.
 - Use `America/Sao_Paulo` as the default timezone.
 - Send timestamps as ISO 8601 strings with timezone offsets.
 - Ask a clarifying question before creating calendar events with ambiguous dates/times.
@@ -85,18 +86,17 @@ curl -s -X POST "$EXEC_ASSISTANT_URL/api/tools/memories" \
 
 ### Calendar
 
+Use Hermes Google Workspace:
+
 ```bash
-curl -s -X POST "$EXEC_ASSISTANT_URL/api/tools/calendar/events" \
-  -H "Authorization: Bearer $EXEC_ASSISTANT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Gym","start":"2026-06-29T18:00:00-03:00","end":"2026-06-29T19:00:00-03:00"}'
+$GAPI calendar create --summary "Gym" --start 2026-06-29T18:00:00-03:00 --end 2026-06-29T19:00:00-03:00
 ```
 
-### Google Tasks
+### Dashboard Snapshot
 
 ```bash
-curl -s -X POST "$EXEC_ASSISTANT_URL/api/tools/tasks" \
+curl -s -X POST "$EXEC_ASSISTANT_URL/api/tools/dashboard/snapshot" \
   -H "Authorization: Bearer $EXEC_ASSISTANT_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"title":"Pay electricity bill","due":"2026-06-30T12:00:00-03:00"}'
+  -d '{"date":"2026-06-29","calendarEvents":[],"tasks":[],"notes":"Synced from Hermes Google Workspace"}'
 ```
