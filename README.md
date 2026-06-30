@@ -19,6 +19,7 @@ Hermes handles the agent runtime, WhatsApp gateway, LLM provider, memory loop, s
 - Exec Assistant owns goals, dashboard snapshots, and overview aggregation.
 - Hermes pushes dashboard snapshots containing calendar events, tasks, reminders, memory highlights, and notes.
 - Exec Assistant can queue dashboard task/reminder actions; Hermes applies them through native Google/reminder tools and marks them processed.
+- Hermes should push refreshed dashboard snapshots immediately after Calendar, Tasks, reminders, or dashboard memory highlights change.
 - Prefer Hermes-native workflows over adding companion endpoints whenever Hermes can do the job directly.
 
 ## First Deploy

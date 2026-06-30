@@ -33,7 +33,8 @@ Hermes remains the source of truth for WhatsApp, reminders, saved memories, Goog
 - Use Hermes-native memory for preferences/facts; do not write memories to Exec Assistant.
 - Use Hermes scheduled tasks/cron for reminders; do not create reminders in Exec Assistant.
 - Use Hermes Google Workspace for Calendar and Tasks. Google commands should use `$GAPI ...`, not the Exec Assistant API.
-- When Exec Assistant queues a task/reminder action, apply it through Hermes-native tools, then mark the action completed or failed.
+- After any Hermes-native change to Calendar, Google Tasks, reminders, or relevant memories, immediately push refreshed Exec Assistant dashboard snapshots for the affected date(s).
+- When Exec Assistant queues a task/reminder action, apply it through Hermes-native tools, then mark the action completed or failed and push refreshed snapshots for affected dates.
 - Use `America/Sao_Paulo` as the default timezone.
 - Send timestamps as ISO 8601 strings with timezone offsets.
 - Ask a clarifying question before ambiguous calendar/task/reminder actions.
@@ -111,6 +112,19 @@ curl -s -X PATCH "$EXEC_ASSISTANT_URL/api/tools/dashboard/actions/<action-id>" \
   -H "Content-Type: application/json" \
   -d '{"status":"failed","errorMessage":"Could not find matching task"}'
 ```
+
+### Push-On-Change Sync
+
+Exec Assistant should be refreshed whenever Hermes changes data that appears on the dashboard.
+
+After creating, updating, completing, or deleting any of these items, run a snapshot sync for every affected date:
+
+- Google Calendar events: sync the event date and any date range it spans.
+- Google Tasks: sync the due date if present; otherwise sync today.
+- Reminders: sync the reminder due/scheduled date.
+- Memories shown in dashboard highlights: sync today and the next 7 days.
+
+If the change can affect multiple dashboard days or recurring items, sync today plus the next 7 days. Do this silently as a side effect after the user-facing action succeeds.
 
 ### Dashboard Snapshot Sync
 
