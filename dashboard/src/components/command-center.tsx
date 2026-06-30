@@ -154,35 +154,43 @@ function SectionCard({
   );
 }
 
+function isGenericAiSummary(summary?: string) {
+  return !summary || /^Hermes synced \d+ calendar event\(s\), \d+ task\(s\), and \d+ reminder\(s\) for \d{4}-\d{2}-\d{2}\.$/.test(summary);
+}
+
+function hasAiOverviewContent(overview?: AiOverview) {
+  return !!overview && (!isGenericAiSummary(overview.summary) || (overview.highlights?.length ?? 0) > 0 || (overview.improvements?.length ?? 0) > 0 || (overview.continue?.length ?? 0) > 0);
+}
+
 function AIOverview({ overview, syncedAt }: { overview?: AiOverview; syncedAt?: string | null }) {
   const blocks = [
     { key: "highlights", label: "Highlights", icon: <Sparkles size={14} />, items: overview?.highlights ?? [], tone: "var(--chart-1)" },
     { key: "improve", label: "Improve", icon: <TrendingUp size={14} />, items: overview?.improvements ?? [], tone: "var(--chart-2)" },
     { key: "continue", label: "Continue", icon: <Lightbulb size={14} />, items: overview?.continue ?? [], tone: "var(--chart-3)" },
-  ];
+  ].filter((block) => block.items.length > 0);
+  const summary = isGenericAiSummary(overview?.summary) ? null : overview?.summary;
+
+  if (!summary && blocks.length === 0) return null;
+
   return (
     <SectionCard title="AI overview" icon={<Sparkles size={18} />} meta={overview?.updatedAt ? `updated ${formatTime(overview.updatedAt)}` : syncedAt ? `updated ${formatTime(syncedAt)}` : "waiting for sync"}>
-      <p className="mb-5 text-sm leading-relaxed text-foreground/80">
-        {overview?.summary ?? "Hermes will generate an overview after the next dashboard snapshot sync."}
-      </p>
-      <div className="grid gap-4 md:grid-cols-3">
-        {blocks.map((b) => (
-          <div key={b.key} className="rounded-2xl bg-secondary/60 p-4">
-            <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider" style={{ color: b.tone }}>
-              {b.icon} {b.label}
-            </div>
-            {b.items.length > 0 ? (
+      {summary && <p className="mb-5 text-sm leading-relaxed text-foreground/80">{summary}</p>}
+      {blocks.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-3">
+          {blocks.map((b) => (
+            <div key={b.key} className="rounded-2xl bg-secondary/60 p-4">
+              <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider" style={{ color: b.tone }}>
+                {b.icon} {b.label}
+              </div>
               <ul className="space-y-1.5">
                 {b.items.map((t) => (
                   <li key={t} className="text-sm leading-snug text-foreground/85">• {t}</li>
                 ))}
               </ul>
-            ) : (
-              <p className="text-sm text-muted-foreground">No items yet.</p>
-            )}
-          </div>
-        ))}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
     </SectionCard>
   );
 }
@@ -437,7 +445,7 @@ export function CommandCenter({ data, selectedDate, loading, error, notice, onDa
 
       {data && (
         <>
-          <div className="mt-6"><AIOverview overview={data.aiOverview} syncedAt={data.google.syncedAt} /></div>
+          {hasAiOverviewContent(data.aiOverview) && <div className="mt-6"><AIOverview overview={data.aiOverview} syncedAt={data.google.syncedAt} /></div>}
           <div className="mt-5 grid gap-5 lg:grid-cols-2"><GoalsProgress goals={data.goals} average={data.stats?.goalAverageProgress} loading={loading} onComplete={onGoalComplete} /><DailyTodo data={data} /></div>
           <div className="mt-5 grid gap-5 lg:grid-cols-2"><CalendarList date={data.date} events={data.calendarEvents} /><TasksList lists={data.taskLists ?? []} tasks={data.tasks} loading={loading} onAction={onTaskAction} /></div>
           <div className="mt-5 grid gap-5 lg:grid-cols-2"><RemindersList reminders={data.reminders} loading={loading} onAction={onReminderAction} /><MemoryList memories={data.memories} /></div>
