@@ -43,14 +43,12 @@ type DashboardData = {
   notes?: string | null;
 };
 
-function tokenFromUrl() {
+function storedToken() {
   const params = new URLSearchParams(window.location.search);
-  const token = params.get("token");
-  if (token) {
-    localStorage.setItem("exec-dashboard-token", token);
+  if (params.has("token")) {
     window.history.replaceState({}, document.title, window.location.pathname);
   }
-  return token ?? localStorage.getItem("exec-dashboard-token") ?? "";
+  return localStorage.getItem("exec-dashboard-token") ?? "";
 }
 
 function formatTime(value?: string) {
@@ -59,7 +57,7 @@ function formatTime(value?: string) {
 }
 
 function App() {
-  const [token, setToken] = useState(tokenFromUrl());
+  const [token, setToken] = useState(storedToken());
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -70,6 +68,11 @@ function App() {
     setError(null);
     try {
       const response = await fetch("/api/dashboard", { headers: { "x-dashboard-token": currentToken } });
+      if (response.status === 401) {
+        localStorage.removeItem("exec-dashboard-token");
+        setToken("");
+        throw new Error("Invalid dashboard token. Paste the current token.");
+      }
       if (!response.ok) throw new Error(await response.text());
       setData(await response.json());
     } catch (caught) {
@@ -110,11 +113,12 @@ function App() {
           <p className="eyebrow">Exec Assistant</p>
           <h1>Dashboard access</h1>
           <p>Paste your dashboard token to view goals, today's highlights, calendar, tasks, and reminders.</p>
+          {error && <div className="notice error">{error}</div>}
           <form
             onSubmit={(event) => {
               event.preventDefault();
               const form = new FormData(event.currentTarget);
-              setToken(String(form.get("token") ?? ""));
+              setToken(String(form.get("token") ?? "").trim());
             }}
           >
             <input name="token" type="password" placeholder="Dashboard token" />

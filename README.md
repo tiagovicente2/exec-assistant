@@ -26,7 +26,7 @@ Hermes handles the agent runtime, WhatsApp gateway, LLM provider, memory loop, s
 2. Run `supabase/schema.sql` in the Supabase SQL editor.
 3. Copy `.env.example` values into Coolify environment variables.
 4. Deploy this app with the Dockerfile.
-5. Visit `https://exec.arpgg.io?token=<DASHBOARD_TOKEN>` for the dashboard.
+5. Visit `https://exec.arpgg.io` and paste `DASHBOARD_TOKEN` into the dashboard form.
 6. Install/configure Hermes Agent separately and add `skills/exec-assistant/SKILL.md` as a Hermes skill.
 7. Set up Hermes Google Workspace for Calendar and Tasks.
 
@@ -71,8 +71,10 @@ Core endpoints are under `/api/tools` and require `Authorization: Bearer <HERMES
 Open:
 
 ```text
-https://exec.arpgg.io?token=<DASHBOARD_TOKEN>
+https://exec.arpgg.io
 ```
+
+Paste `DASHBOARD_TOKEN` into the access form. Do not put dashboard tokens in URLs; URLs can be stored in browser history, proxy logs, and analytics tools.
 
 The dashboard shows:
 
