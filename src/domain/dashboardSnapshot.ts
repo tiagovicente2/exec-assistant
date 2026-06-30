@@ -3,16 +3,20 @@ import { config, ownerProfileId } from "../config.js";
 import { supabase } from "../integrations/supabase.js";
 import { ensureOwnerProfile } from "./profile.js";
 
-export async function getTodaySnapshot() {
-  const date = DateTime.now().setZone(config.DEFAULT_TIMEZONE).toISODate();
+export async function getDashboardSnapshot(date?: string | null) {
+  const snapshotDate = date ?? DateTime.now().setZone(config.DEFAULT_TIMEZONE).toISODate();
   const { data, error } = await supabase
     .from("dashboard_snapshots")
     .select("snapshot_date, calendar_events, tasks, reminders, memories, notes, updated_at")
     .eq("profile_id", ownerProfileId)
-    .eq("snapshot_date", date)
+    .eq("snapshot_date", snapshotDate)
     .maybeSingle();
   if (error) throw error;
   return data;
+}
+
+export async function getTodaySnapshot() {
+  return getDashboardSnapshot();
 }
 
 export async function upsertDashboardSnapshot(input: {

@@ -66,19 +66,31 @@ function formatTime(value?: string) {
   return new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 }
 
+function isoDate(date = new Date()) {
+  return date.toISOString().slice(0, 10);
+}
+
+function shiftDate(value: string, days: number) {
+  const date = new Date(`${value}T00:00:00`);
+  date.setDate(date.getDate() + days);
+  return isoDate(date);
+}
+
 function App() {
   const [token, setToken] = useState(storedToken());
+  const [selectedDate, setSelectedDate] = useState(isoDate());
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function loadDashboard(currentToken: string) {
+  async function loadDashboard(currentToken: string, date = selectedDate) {
     if (!currentToken) return;
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/dashboard", { headers: { "x-dashboard-token": currentToken } });
+      const params = new URLSearchParams({ date });
+      const response = await fetch(`/api/dashboard?${params.toString()}`, { headers: { "x-dashboard-token": currentToken } });
       if (response.status === 401) {
         localStorage.removeItem("exec-dashboard-token");
         setToken("");
@@ -105,7 +117,7 @@ function App() {
         body: body === undefined ? undefined : JSON.stringify(body)
       });
       if (!response.ok) throw new Error(await response.text());
-      await loadDashboard(token);
+      await loadDashboard(token, selectedDate);
       return true;
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Action failed");
@@ -129,8 +141,8 @@ function App() {
   useEffect(() => {
     if (!token) return;
     localStorage.setItem("exec-dashboard-token", token);
-    void loadDashboard(token);
-  }, [token]);
+    void loadDashboard(token, selectedDate);
+  }, [token, selectedDate]);
 
   if (!token) {
     return (
@@ -160,10 +172,19 @@ function App() {
       <header className="hero">
         <div>
           <p className="eyebrow">Exec Assistant</p>
-          <h1>Today's command center</h1>
+          <h1>Command center</h1>
           <p>{data ? `${data.date} · ${data.timezone}` : "Loading your day..."}</p>
         </div>
-
+        <div className="date-controls">
+          <input
+            aria-label="Overview date"
+            type="date"
+            value={selectedDate}
+            onChange={(event) => setSelectedDate(event.target.value)}
+          />
+          <button className="secondary" disabled={loading} onClick={() => setSelectedDate(isoDate())}>Today</button>
+          <button className="secondary" disabled={loading} onClick={() => setSelectedDate(shiftDate(selectedDate, 1))}>Next day</button>
+        </div>
       </header>
 
       {loading && <div className="notice">Loading dashboard...</div>}
@@ -207,8 +228,8 @@ function App() {
             </article>
 
             <article className="panel">
-              <div className="panel-title"><h2>Calendar</h2><span>today</span></div>
-              {data.calendarEvents.length === 0 && <p className="muted">No events found for today.</p>}
+              <div className="panel-title"><h2>Calendar</h2><span>{data.date}</span></div>
+              {data.calendarEvents.length === 0 && <p className="muted">No events found for this day.</p>}
               {data.calendarEvents.map((event) => (
                 <div className="line-item" key={event.id ?? event.summary}>
                   <time>{formatTime(event.start?.dateTime ?? event.start?.date)}</time>
@@ -234,7 +255,7 @@ function App() {
 
             <article className="panel wide">
               <div className="panel-title"><h2>Reminders</h2><span>{data.reminders.length} due</span></div>
-              {data.reminders.length === 0 && <p className="muted">No reminders due today.</p>}
+              {data.reminders.length === 0 && <p className="muted">No reminders due by this day.</p>}
               {data.reminders.map((reminder) => (
                 <div className="line-item" key={reminder.id}>
                   <time>{formatTime(reminder.remind_at)}</time>

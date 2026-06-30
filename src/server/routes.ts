@@ -13,9 +13,10 @@ router.get("/health", (_req, res) => {
   res.json({ ok: true, service: "exec-assistant", mode: "hermes-companion" });
 });
 
-router.get("/api/dashboard", requireDashboardToken, async (_req, res, next) => {
+router.get("/api/dashboard", requireDashboardToken, async (req, res, next) => {
   try {
-    res.json(await todayOverview());
+    const date = typeof req.query.date === "string" ? z.string().date().parse(req.query.date) : undefined;
+    res.json(await todayOverview(date));
   } catch (error) {
     next(error);
   }
@@ -48,9 +49,10 @@ router.post("/api/dashboard/actions", requireDashboardToken, async (req, res, ne
 const tools = express.Router();
 tools.use(requireHermesToolToken);
 
-tools.get("/overview/today", async (_req, res, next) => {
+tools.get("/overview/today", async (req, res, next) => {
   try {
-    res.json(await todayOverview());
+    const date = typeof req.query.date === "string" ? z.string().date().parse(req.query.date) : undefined;
+    res.json(await todayOverview(date));
   } catch (error) {
     next(error);
   }

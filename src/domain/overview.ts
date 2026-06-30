@@ -2,7 +2,7 @@ import { DateTime } from "luxon";
 import { config } from "../config.js";
 import { listDashboardActions } from "./dashboardActions.js";
 import { listGoals } from "./goals.js";
-import { getTodaySnapshot } from "./dashboardSnapshot.js";
+import { getDashboardSnapshot } from "./dashboardSnapshot.js";
 
 type JsonRecord = Record<string, unknown>;
 type NormalizedTask = JsonRecord & { path: string; listTitle: string; title: string; due?: string; completed: boolean };
@@ -168,22 +168,27 @@ function filterQueuedActions<T extends { id?: string; path?: string }>(items: T[
   return items.filter((item) => !actions.some((action) => isQueuedFor(action, targetType, item)));
 }
 
-function normalizeReminders(rawReminders: unknown[], now: DateTime) {
+function normalizeReminders(rawReminders: unknown[], day: DateTime) {
   return rawReminders
     .map((reminder, index) => normalizeReminder(reminder, index))
     .filter((reminder): reminder is NormalizedReminder => !!reminder)
     .filter((reminder) => {
       const remindAt = DateTime.fromISO(reminder.remind_at, { zone: config.DEFAULT_TIMEZONE });
-      return remindAt.isValid ? remindAt <= now.endOf("day") : true;
+      return remindAt.isValid ? remindAt <= day.endOf("day") : true;
     })
     .sort((a, b) => a.remind_at.localeCompare(b.remind_at));
 }
 
-export async function todayOverview() {
-  const now = DateTime.now().setZone(config.DEFAULT_TIMEZONE);
-  const [goals, snapshot, pendingActions] = await Promise.all([listGoals("active"), getTodaySnapshot(), listDashboardActions("pending")]);
+function overviewDay(date?: string) {
+  const parsed = date ? DateTime.fromISO(date, { zone: config.DEFAULT_TIMEZONE }) : DateTime.now().setZone(config.DEFAULT_TIMEZONE);
+  return parsed.isValid ? parsed.startOf("day") : DateTime.now().setZone(config.DEFAULT_TIMEZONE).startOf("day");
+}
+
+export async function todayOverview(date?: string) {
+  const day = overviewDay(date);
+  const [goals, snapshot, pendingActions] = await Promise.all([listGoals("active"), getDashboardSnapshot(day.toISODate()), listDashboardActions("pending")]);
   const queuedActions = pendingActions.filter(isRecord);
-  const dueReminders = filterQueuedActions(normalizeReminders((snapshot?.reminders as unknown[] | null) ?? [], now), queuedActions, "reminder");
+  const dueReminders = filterQueuedActions(normalizeReminders((snapshot?.reminders as unknown[] | null) ?? [], day), queuedActions, "reminder");
   const calendars = normalizeCalendars((snapshot?.calendar_events as unknown[] | null) ?? []);
   const calendarEvents = calendars.flatMap((calendar) => calendar.events);
   const taskLists = normalizeTaskLists((snapshot?.tasks as unknown[] | null) ?? []);
@@ -192,24 +197,24 @@ export async function todayOverview() {
   const completedTasks = allTasks.filter((task) => task.completed);
   const overdueTasks = tasks.filter((task) => {
     const due = taskDueDate(task);
-    return due ? DateTime.fromISO(due).isValid && DateTime.fromISO(due) < now.startOf("day") : false;
+    return due ? DateTime.fromISO(due).isValid && DateTime.fromISO(due) < day.startOf("day") : false;
   });
   const dueTodayTasks = tasks.filter((task) => {
     const due = taskDueDate(task);
-    return due ? DateTime.fromISO(due).isValid && DateTime.fromISO(due).hasSame(now, "day") : false;
+    return due ? DateTime.fromISO(due).isValid && DateTime.fromISO(due).hasSame(day, "day") : false;
   });
   const goalAverageProgress = goals.length > 0 ? Math.round(goals.reduce((sum, goal) => sum + goal.progress, 0) / goals.length) : 0;
-  const nextEvent = calendarEvents.find((event) => stringValue(event.startValue) && DateTime.fromISO(String(event.startValue)) >= now);
+  const nextEvent = calendarEvents.find((event) => stringValue(event.startValue) && DateTime.fromISO(String(event.startValue)) >= day.startOf("day"));
 
   const highlights = [
     `${calendarEvents.length} event${calendarEvents.length === 1 ? "" : "s"} across ${calendars.length} calendar${calendars.length === 1 ? "" : "s"}`,
     `${tasks.length} open task${tasks.length === 1 ? "" : "s"} across ${taskLists.length} list${taskLists.length === 1 ? "" : "s"}`,
-    `${dueReminders.length} reminder${dueReminders.length === 1 ? "" : "s"} due today`,
+    `${dueReminders.length} reminder${dueReminders.length === 1 ? "" : "s"} due by this day`,
     `${goalAverageProgress}% average goal progress`
   ];
 
   return {
-    date: now.toISODate(),
+    date: day.toISODate(),
     timezone: config.DEFAULT_TIMEZONE,
     google: { connected: true, error: null, source: "hermes-google-workspace", syncedAt: snapshot?.updated_at ?? null },
     highlights,

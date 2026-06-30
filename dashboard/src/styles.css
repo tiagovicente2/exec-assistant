@@ -58,6 +58,21 @@ button.secondary { background: #efe5c9; }
   color: #f7f3e8;
 }
 
+.date-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: min(100%, 360px);
+}
+
+.date-controls input {
+  border-color: rgba(247, 243, 232, 0.36);
+  background: rgba(247, 243, 232, 0.92);
+  color: #182015;
+  font-weight: 800;
+}
+
 .highlights {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -145,5 +160,6 @@ input { border: 1px solid rgba(24, 32, 21, 0.18); border-radius: 14px; padding: 
 
 @media (max-width: 820px) {
   .hero, .panel-title, .goal-row, .line-item { align-items: flex-start; flex-direction: column; }
+  .date-controls { justify-content: flex-start; }
   .highlights, .grid { grid-template-columns: 1fr; }
 }
