@@ -112,6 +112,8 @@ tools.post("/dashboard/snapshot", async (req, res, next) => {
       taskLists: z.array(z.unknown()).optional(),
       reminders: z.array(z.unknown()).optional(),
       memories: z.array(z.unknown()).optional(),
+      aiOverview: z.unknown().optional(),
+      ai_overview: z.unknown().optional(),
       notes: z.string().nullable().optional()
     }).parse(req.body);
     res.status(201).json(await upsertDashboardSnapshot(body));

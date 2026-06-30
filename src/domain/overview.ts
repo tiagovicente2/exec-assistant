@@ -168,6 +168,44 @@ function filterQueuedActions<T extends { id?: string; path?: string }>(items: T[
   return items.filter((item) => !actions.some((action) => isQueuedFor(action, targetType, item)));
 }
 
+function normalizeAiOverview(rawOverview: unknown, input: {
+  calendarEvents: NormalizedEvent[];
+  tasks: NormalizedTask[];
+  dueReminders: NormalizedReminder[];
+  goals: { title: string; progress: number }[];
+  goalAverageProgress: number;
+}) {
+  if (isRecord(rawOverview)) {
+    return {
+      summary: stringValue(rawOverview.summary) ?? "Your day is synced and ready for review.",
+      highlights: Array.isArray(rawOverview.highlights) ? rawOverview.highlights.map(String) : [],
+      improvements: Array.isArray(rawOverview.improvements) ? rawOverview.improvements.map(String) : [],
+      continue: Array.isArray(rawOverview.continue) ? rawOverview.continue.map(String) : Array.isArray(rawOverview.continueItems) ? rawOverview.continueItems.map(String) : [],
+      updatedAt: stringValue(rawOverview.updatedAt) ?? null
+    };
+  }
+
+  const bestGoal = input.goals.slice().sort((a, b) => b.progress - a.progress)[0];
+  const summary = `${input.calendarEvents.length} event${input.calendarEvents.length === 1 ? "" : "s"}, ${input.tasks.length} open task${input.tasks.length === 1 ? "" : "s"}, and ${input.dueReminders.length} reminder${input.dueReminders.length === 1 ? "" : "s"} are in view. Average goal progress is ${input.goalAverageProgress}%.`;
+  return {
+    summary,
+    highlights: [
+      bestGoal ? `${bestGoal.title} is at ${bestGoal.progress}% progress` : "Goals are ready to be planned",
+      `${input.calendarEvents.length} calendar item${input.calendarEvents.length === 1 ? "" : "s"} synced for this day`,
+      `${input.dueReminders.length} reminder${input.dueReminders.length === 1 ? "" : "s"} due by this day`
+    ],
+    improvements: [
+      input.tasks.length > 0 ? `${input.tasks.length} open task${input.tasks.length === 1 ? "" : "s"} to triage` : "No open tasks synced for this day",
+      input.goalAverageProgress < 70 ? "Goal progress could use attention" : "Keep goals moving with the next clear action"
+    ],
+    continue: [
+      "Review the day before committing to new work",
+      input.calendarEvents.length > 0 ? "Protect focus blocks around scheduled events" : "Use the open calendar space intentionally"
+    ],
+    updatedAt: null
+  };
+}
+
 function normalizeReminders(rawReminders: unknown[], day: DateTime) {
   return rawReminders
     .map((reminder, index) => normalizeReminder(reminder, index))
@@ -220,6 +258,7 @@ export async function todayOverview(date?: string) {
     highlights,
     goals,
     reminders: dueReminders,
+    aiOverview: normalizeAiOverview(snapshot?.ai_overview, { calendarEvents, tasks, dueReminders, goals, goalAverageProgress }),
     memories: (snapshot?.memories as unknown[] | null) ?? [],
     calendars,
     calendarEvents,

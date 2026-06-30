@@ -2,11 +2,11 @@
 
 ## Commands
 
-- Install with `npm install`; the repo uses `package-lock.json` and no separate package manager config.
-- Run the API in dev with `npm run dev`; it starts `src/server/index.ts` on `PORT` using `tsx watch`.
-- Run the dashboard dev server separately with `npm run dev:dashboard`; Vite's root is `dashboard/` and it proxies `/api` to `http://localhost:3000`.
-- Use `npm run build` as the main verification before deploy; it runs `tsc -p tsconfig.json` for `src/` and then `vite build` to `dist/public`.
-- `npm run typecheck` checks server/domain TS only. `dashboard/` is excluded from `tsconfig.json`; Vite bundles it but does not provide full dashboard typechecking.
+- Install with `bun install`; the repo uses `bun.lock` and Bun as the package manager/runtime.
+- Run the API in dev with `bun run dev`; it starts `src/server/index.ts` on `PORT` using Bun watch.
+- Run the dashboard dev server separately with `bun run dev:dashboard`; Vite's root is `dashboard/` and it proxies `/api` to `http://localhost:3000`.
+- Use `bun run build` as the main verification before deploy; it runs `tsc -p tsconfig.json` for `src/` and then `vite build` to `dist/public`.
+- `bun run typecheck` checks server/domain TS only. `dashboard/` is excluded from `tsconfig.json`; Vite bundles it but does not provide full dashboard typechecking.
 - There is no test script or CI workflow in this repo right now.
 
 ## Architecture Boundaries
@@ -32,7 +32,7 @@
 
 ## Deployment
 
-- Production is deployed by Coolify from the Dockerfile. The Docker image runs `npm run build` and `npm start`.
+- Production is deployed by Coolify from the Dockerfile. The Docker image runs `bun run build` and `bun run start`.
 - The Dockerfile installs `curl`; keep it unless the Coolify healthcheck is changed.
 - Generated output is `dist/` and should not be edited directly.
 

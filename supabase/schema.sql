@@ -28,6 +28,7 @@ create table if not exists dashboard_snapshots (
   tasks jsonb not null default '[]'::jsonb,
   reminders jsonb not null default '[]'::jsonb,
   memories jsonb not null default '[]'::jsonb,
+  ai_overview jsonb,
   notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -55,6 +56,7 @@ create index if not exists dashboard_actions_profile_status_idx on dashboard_act
 
 alter table dashboard_snapshots add column if not exists reminders jsonb not null default '[]'::jsonb;
 alter table dashboard_snapshots add column if not exists memories jsonb not null default '[]'::jsonb;
+alter table dashboard_snapshots add column if not exists ai_overview jsonb;
 
 alter table profiles enable row level security;
 alter table goals enable row level security;

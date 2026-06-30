@@ -35,14 +35,14 @@ Hermes handles the agent runtime, WhatsApp gateway, LLM provider, memory loop, s
 ## Local Development
 
 ```bash
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 In another terminal for Vite dashboard development:
 
 ```bash
-npm run dev:dashboard
+bun run dev:dashboard
 ```
 
 WhatsApp, memories, reminder delivery, recurring schedules, Calendar, and Tasks are handled by Hermes, not this companion app.
@@ -85,6 +85,7 @@ The dashboard shows:
 - Calendar summary
 - Tasks with done/remove actions
 - Reminders due today with done/remove actions
+- AI overview generated/synced by Hermes
 - Memory highlights
 
 ## Notes

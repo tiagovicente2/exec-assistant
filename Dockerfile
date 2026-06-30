@@ -1,4 +1,4 @@
-FROM node:22-bookworm-slim AS base
+FROM oven/bun:1.3.14-debian AS base
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends curl \
@@ -6,12 +6,12 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
 COPY . .
-RUN npm run build
+RUN bun run build
 
 ENV NODE_ENV=production
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["bun", "run", "start"]

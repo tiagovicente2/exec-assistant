@@ -134,7 +134,7 @@ For `sync-exec-assistant-dashboard-next-7-days-and-process-actions`, do this aut
 
 1. Use Hermes-native Google Calendar, Google Tasks, reminders, and memory tools.
 2. Build one snapshot per date for today and the next 7 days.
-3. POST each date separately to `/api/tools/dashboard/snapshot` with the relevant `calendarEvents`, `tasks`/`taskLists`, `reminders`, `memories`, and `notes`.
+3. POST each date separately to `/api/tools/dashboard/snapshot` with the relevant `calendarEvents`, `tasks`/`taskLists`, `reminders`, `memories`, `aiOverview`, and `notes`.
 4. Fetch `/api/tools/dashboard/actions` and process pending actions using Hermes-native task/reminder tools.
 5. PATCH each processed action as `completed` or `failed`.
 
@@ -160,6 +160,13 @@ Grouped Calendar/Task payloads are also accepted:
   "taskLists": [{ "title": "Inbox", "tasks": [] }],
   "reminders": [{ "id": "hermes-job-1", "message": "Call Ana", "remindAt": "2026-06-29T15:00:00-03:00" }],
   "memories": [{ "kind": "preference", "content": "Tiago prefers meetings after 10am" }],
+  "aiOverview": {
+    "summary": "Short synthesized overview for this day.",
+    "highlights": ["What is going well"],
+    "improvements": ["What needs attention"],
+    "continue": ["Habit or plan to keep"],
+    "updatedAt": "2026-06-29T15:00:00-03:00"
+  },
   "notes": "Synced from Hermes Google Workspace"
 }
 ```

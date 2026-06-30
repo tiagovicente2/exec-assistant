@@ -7,7 +7,7 @@ export async function getDashboardSnapshot(date?: string | null) {
   const snapshotDate = date ?? DateTime.now().setZone(config.DEFAULT_TIMEZONE).toISODate();
   const { data, error } = await supabase
     .from("dashboard_snapshots")
-    .select("snapshot_date, calendar_events, tasks, reminders, memories, notes, updated_at")
+    .select("snapshot_date, calendar_events, tasks, reminders, memories, ai_overview, notes, updated_at")
     .eq("profile_id", ownerProfileId)
     .eq("snapshot_date", snapshotDate)
     .maybeSingle();
@@ -27,6 +27,8 @@ export async function upsertDashboardSnapshot(input: {
   taskLists?: unknown[];
   reminders?: unknown[];
   memories?: unknown[];
+  aiOverview?: unknown;
+  ai_overview?: unknown;
   notes?: string | null;
 }) {
   await ensureOwnerProfile();
@@ -44,6 +46,7 @@ export async function upsertDashboardSnapshot(input: {
         tasks,
         reminders: input.reminders ?? [],
         memories: input.memories ?? [],
+        ai_overview: input.aiOverview ?? input.ai_overview ?? null,
         notes: input.notes ?? null,
         updated_at: new Date().toISOString()
       },
