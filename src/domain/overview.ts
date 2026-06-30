@@ -136,7 +136,7 @@ function normalizeReminder(reminder: unknown, index: number): NormalizedReminder
   return {
     ...reminder,
     id: stringValue(reminder.id) ?? `hermes-${index}`,
-    message: titleFrom(reminder, "Untitled reminder"),
+    message: stringValue(reminder.message) ?? titleFrom(reminder, "Untitled reminder"),
     remind_at: remindAt,
     timezone: stringValue(reminder.timezone) ?? config.DEFAULT_TIMEZONE,
     source: "hermes"
