@@ -70,6 +70,12 @@ function isoDate(date = new Date()) {
   return date.toISOString().slice(0, 10);
 }
 
+function formatDate(value?: string | null) {
+  if (!value) return "";
+  const [year, month, day] = value.slice(0, 10).split("-");
+  return year && month && day ? `${day}/${month}/${year}` : value;
+}
+
 function shiftDate(value: string, days: number) {
   const date = new Date(`${value}T00:00:00`);
   date.setDate(date.getDate() + days);
@@ -173,7 +179,7 @@ function App() {
         <div>
           <p className="eyebrow">Exec Assistant</p>
           <h1>Command center</h1>
-          <p>{data ? `${data.date} · ${data.timezone}` : "Loading your day..."}</p>
+          <p>{data ? `${formatDate(data.date)} · ${data.timezone}` : "Loading your day..."}</p>
         </div>
         <div className="date-controls">
           <input
@@ -182,6 +188,7 @@ function App() {
             value={selectedDate}
             onChange={(event) => setSelectedDate(event.target.value)}
           />
+          <span className="date-display">{formatDate(selectedDate)}</span>
           <button className="secondary" disabled={loading} onClick={() => setSelectedDate(isoDate())}>Today</button>
           <button className="secondary" disabled={loading} onClick={() => setSelectedDate(shiftDate(selectedDate, 1))}>Next day</button>
         </div>
@@ -200,7 +207,7 @@ function App() {
             ))}
           </section>
 
-          {data.google.syncedAt && <div className="notice">Synced at {new Date(data.google.syncedAt).toLocaleString()}</div>}
+          {data.google.syncedAt && <div className="notice">Synced at {new Date(data.google.syncedAt).toLocaleString("pt-BR")}</div>}
           {data.notes && <div className="notice">{data.notes}</div>}
 
           <section className="grid">
@@ -218,7 +225,7 @@ function App() {
                       <span>{goal.progress}%</span>
                     </div>
                     <div className="bar"><span style={{ width: `${goal.progress}%` }} /></div>
-                    {goal.target_date && <p className="muted">Target: {goal.target_date}</p>}
+                    {goal.target_date && <p className="muted">Target: {formatDate(goal.target_date)}</p>}
                     <div className="actions">
                       <button disabled={loading} onClick={() => void runAction("PATCH", `/api/dashboard/goals/${goal.id}`, { status: "done", progress: 100 })}>Complete</button>
                     </div>
@@ -228,7 +235,7 @@ function App() {
             </article>
 
             <article className="panel">
-              <div className="panel-title"><h2>Calendar</h2><span>{data.date}</span></div>
+              <div className="panel-title"><h2>Calendar</h2><span>{formatDate(data.date)}</span></div>
               {data.calendarEvents.length === 0 && <p className="muted">No events found for this day.</p>}
               {data.calendarEvents.map((event) => (
                 <div className="line-item" key={event.id ?? event.summary}>
@@ -244,7 +251,7 @@ function App() {
               {data.tasks.map((task) => (
                 <div className="line-item" key={task.id ?? task.path ?? task.title}>
                   <span>{task.title ?? "Untitled task"}</span>
-                  {task.due && <time>{new Date(task.due).toLocaleDateString()}</time>}
+                  {task.due && <time>{formatDate(task.due)}</time>}
                   <div className="actions compact">
                     <button disabled={loading} onClick={() => void queueItemAction("task", "done", task)}>Done</button>
                     <button className="secondary" disabled={loading} onClick={() => void queueItemAction("task", "remove", task)}>Remove</button>

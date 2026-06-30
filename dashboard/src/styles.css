@@ -73,6 +73,12 @@ button.secondary { background: #efe5c9; }
   font-weight: 800;
 }
 
+.date-display {
+  align-self: center;
+  color: #f7f3e8;
+  font-weight: 800;
+}
+
 .highlights {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
