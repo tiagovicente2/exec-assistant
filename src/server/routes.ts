@@ -2,10 +2,8 @@ import express from "express";
 import { z } from "zod";
 import { config } from "../config.js";
 import { createGoal, listGoals, updateGoal } from "../domain/goals.js";
-import { saveMemory, searchMemories } from "../domain/memory.js";
-import { cancelReminder, createReminder, dueReminders, listReminders, markReminderSent } from "../domain/reminders.js";
 import { todayOverview } from "../domain/overview.js";
-import { removeTodaySnapshotTask, updateTodaySnapshotTask, upsertDashboardSnapshot } from "../domain/dashboardSnapshot.js";
+import { upsertDashboardSnapshot } from "../domain/dashboardSnapshot.js";
 import { requireDashboardToken, requireHermesToolToken } from "./auth.js";
 
 const router = express.Router();
@@ -26,42 +24,6 @@ router.patch("/api/dashboard/goals/:id", requireDashboardToken, async (req, res,
   try {
     const body = z.object({ status: z.string().optional(), progress: z.number().min(0).max(100).optional() }).parse(req.body);
     res.json(await updateGoal({ id: req.params.id, ...body }));
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.post("/api/dashboard/reminders/:id/sent", requireDashboardToken, async (req, res, next) => {
-  try {
-    await markReminderSent(req.params.id);
-    res.json({ ok: true });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.delete("/api/dashboard/reminders/:id", requireDashboardToken, async (req, res, next) => {
-  try {
-    res.json(await cancelReminder(req.params.id));
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.patch("/api/dashboard/tasks/:index", requireDashboardToken, async (req, res, next) => {
-  try {
-    const index = Number.parseInt(req.params.index, 10);
-    const body = z.object({ status: z.literal("completed") }).parse(req.body);
-    res.json(await updateTodaySnapshotTask(index, { status: body.status, completed: new Date().toISOString() }));
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.delete("/api/dashboard/tasks/:index", requireDashboardToken, async (req, res, next) => {
-  try {
-    const index = Number.parseInt(req.params.index, 10);
-    res.json(await removeTodaySnapshotTask(index));
   } catch (error) {
     next(error);
   }
@@ -104,71 +66,16 @@ tools.patch("/goals/:id", async (req, res, next) => {
   }
 });
 
-tools.get("/reminders", async (_req, res, next) => {
-  try {
-    res.json(await listReminders());
-  } catch (error) {
-    next(error);
-  }
-});
-
-tools.get("/reminders/due", async (_req, res, next) => {
-  try {
-    res.json(await dueReminders());
-  } catch (error) {
-    next(error);
-  }
-});
-
-tools.post("/reminders", async (req, res, next) => {
-  try {
-    const body = z.object({ message: z.string().min(1), remindAt: z.string().min(1), recurrenceRule: z.string().optional() }).parse(req.body);
-    res.status(201).json(await createReminder(body));
-  } catch (error) {
-    next(error);
-  }
-});
-
-tools.delete("/reminders/:id", async (req, res, next) => {
-  try {
-    res.json(await cancelReminder(req.params.id));
-  } catch (error) {
-    next(error);
-  }
-});
-
-tools.post("/reminders/:id/sent", async (req, res, next) => {
-  try {
-    await markReminderSent(req.params.id);
-    res.json({ ok: true });
-  } catch (error) {
-    next(error);
-  }
-});
-
-tools.get("/memories", async (req, res, next) => {
-  try {
-    res.json(await searchMemories(typeof req.query.q === "string" ? req.query.q : undefined));
-  } catch (error) {
-    next(error);
-  }
-});
-
-tools.post("/memories", async (req, res, next) => {
-  try {
-    const body = z.object({ kind: z.string().optional(), content: z.string().min(1), importance: z.number().min(1).max(5).optional() }).parse(req.body);
-    res.status(201).json(await saveMemory(body));
-  } catch (error) {
-    next(error);
-  }
-});
-
 tools.post("/dashboard/snapshot", async (req, res, next) => {
   try {
     const body = z.object({
       date: z.string().optional(),
       calendarEvents: z.array(z.unknown()).optional(),
+      calendars: z.array(z.unknown()).optional(),
       tasks: z.array(z.unknown()).optional(),
+      taskLists: z.array(z.unknown()).optional(),
+      reminders: z.array(z.unknown()).optional(),
+      memories: z.array(z.unknown()).optional(),
       notes: z.string().nullable().optional()
     }).parse(req.body);
     res.status(201).json(await upsertDashboardSnapshot(body));

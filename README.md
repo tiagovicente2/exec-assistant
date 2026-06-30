@@ -2,23 +2,23 @@
 
 Hermes Agent companion service for a personal WhatsApp assistant.
 
-Hermes handles the agent runtime, WhatsApp gateway, LLM provider, memory loop, skills, Google Workspace, and scheduled automations. This app is a companion service for structured state and the dashboard at `https://exec.arpgg.io`.
+Hermes handles the agent runtime, WhatsApp gateway, LLM provider, memory loop, skills, reminders, Google Workspace, and scheduled automations. This app is a companion service for goals, dashboard snapshots, and the dashboard at `https://exec.arpgg.io`.
 
 ## Stack
 
 - Hermes Agent for WhatsApp/chat/agent orchestration
 - Node.js/TypeScript Express companion API
-- Self-hosted Supabase for structured state
+- Self-hosted Supabase for dashboard/goal state
 - Hermes Google Workspace for Google Calendar and Google Tasks
 - React dashboard served by the same app
 - Coolify Docker deployment
 
 ## Responsibility Split
 
-- Hermes owns WhatsApp/chat delivery, recurring reminders, scheduled jobs, Google Calendar, Google Tasks, and proactive automations.
-- Exec Assistant owns goals, saved memories, dashboard snapshots, overview aggregation, and optional dashboard-only reminder records.
+- Hermes owns WhatsApp/chat delivery, reminders, saved memories, scheduled jobs, Google Calendar, Google Tasks, and proactive automations.
+- Exec Assistant owns goals, dashboard snapshots, and overview aggregation.
+- Hermes pushes dashboard snapshots containing calendar events, tasks, reminders, memory highlights, and notes.
 - Prefer Hermes-native workflows over adding companion endpoints whenever Hermes can do the job directly.
-- Do not use Exec Assistant as a recurrence engine. It does not run a scheduler or advance recurring reminders.
 
 ## First Deploy
 
@@ -43,7 +43,7 @@ In another terminal for Vite dashboard development:
 npm run dev:dashboard
 ```
 
-WhatsApp, proactive reminder delivery, recurring schedules, Calendar, and Tasks are handled by Hermes, not this companion app.
+WhatsApp, memories, reminder delivery, recurring schedules, Calendar, and Tasks are handled by Hermes, not this companion app.
 
 ## Hermes Integration
 
@@ -64,7 +64,7 @@ hermes skills install tiagovicente2/exec-assistant/skills/exec-assistant --force
 
 Or copy `skills/exec-assistant/SKILL.md` into `~/.hermes/skills/exec-assistant/SKILL.md` inside the Hermes home volume.
 
-Core endpoints are under `/api/tools` and require `Authorization: Bearer <HERMES_TOOL_TOKEN>`. Use them for companion state, not for Hermes-native capabilities like recurring reminders or Google Workspace actions.
+Core endpoints are under `/api/tools` and require `Authorization: Bearer <HERMES_TOOL_TOKEN>`. Use them for companion goals and dashboard snapshots, not for Hermes-native capabilities like memories, reminders, or Google Workspace actions.
 
 ## Dashboard
 
@@ -82,7 +82,8 @@ The dashboard shows:
 - Today's highlights
 - Calendar summary
 - Google Tasks
-- Reminders due today
+- Hermes reminders due today
+- Hermes memory highlights
 
 ## Notes
 

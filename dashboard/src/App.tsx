@@ -14,6 +14,7 @@ type Reminder = {
   id: string;
   message: string;
   remind_at: string;
+  source?: string;
 };
 
 type CalendarEvent = {
@@ -31,6 +32,13 @@ type Task = {
   completed?: string;
 };
 
+type MemoryHighlight = {
+  id?: string;
+  kind?: string;
+  content?: string;
+  title?: string;
+};
+
 type DashboardData = {
   date: string;
   timezone: string;
@@ -38,6 +46,7 @@ type DashboardData = {
   highlights: string[];
   goals: Goal[];
   reminders: Reminder[];
+  memories: MemoryHighlight[];
   calendarEvents: CalendarEvent[];
   tasks: Task[];
   notes?: string | null;
@@ -193,29 +202,34 @@ function App() {
             <article className="panel">
               <div className="panel-title"><h2>Tasks</h2><span>Google Tasks</span></div>
               {data.tasks.length === 0 && <p className="muted">No open tasks found.</p>}
-              {data.tasks.map((task, index) => (
+              {data.tasks.map((task) => (
                 <div className="line-item" key={task.id ?? task.title}>
                   <span>{task.title ?? "Untitled task"}</span>
                   {task.due && <time>{new Date(task.due).toLocaleDateString()}</time>}
-                  <div className="actions compact">
-                    <button disabled={loading} onClick={() => void runAction("PATCH", `/api/dashboard/tasks/${index}`, { status: "completed" })}>Done</button>
-                    <button className="secondary" disabled={loading} onClick={() => void runAction("DELETE", `/api/dashboard/tasks/${index}`)}>Remove</button>
-                  </div>
+                  <span className="muted">Manage in Hermes/Google Tasks</span>
                 </div>
               ))}
             </article>
 
             <article className="panel wide">
-              <div className="panel-title"><h2>Reminders</h2><span>due today</span></div>
+              <div className="panel-title"><h2>Reminders</h2><span>Hermes owned</span></div>
               {data.reminders.length === 0 && <p className="muted">No reminders due today.</p>}
               {data.reminders.map((reminder) => (
                 <div className="line-item" key={reminder.id}>
                   <time>{formatTime(reminder.remind_at)}</time>
                   <span>{reminder.message}</span>
-                  <div className="actions compact">
-                    <button disabled={loading} onClick={() => void runAction("POST", `/api/dashboard/reminders/${reminder.id}/sent`)}>Done</button>
-                    <button className="secondary" disabled={loading} onClick={() => void runAction("DELETE", `/api/dashboard/reminders/${reminder.id}`)}>Remove</button>
-                  </div>
+                  <span className="muted">Manage in Hermes</span>
+                </div>
+              ))}
+            </article>
+
+            <article className="panel wide">
+              <div className="panel-title"><h2>Memory Highlights</h2><span>Hermes owned</span></div>
+              {data.memories.length === 0 && <p className="muted">No memory highlights synced.</p>}
+              {data.memories.map((memory, index) => (
+                <div className="line-item" key={memory.id ?? `${memory.kind ?? "memory"}-${index}`}>
+                  <span>{memory.content ?? memory.title ?? "Memory highlight"}</span>
+                  {memory.kind && <span className="muted">{memory.kind}</span>}
                 </div>
               ))}
             </article>
