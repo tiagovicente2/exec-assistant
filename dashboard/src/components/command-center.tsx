@@ -438,7 +438,6 @@ export function CommandCenter({ data, selectedDate, loading, error, notice, onDa
       {data && (
         <>
           <div className="mt-6"><AIOverview overview={data.aiOverview} syncedAt={data.google.syncedAt} /></div>
-          {data.notes && <div className="mt-4 rounded-2xl border border-border bg-card p-3 text-sm text-muted-foreground">{data.notes}</div>}
           <div className="mt-5 grid gap-5 lg:grid-cols-2"><GoalsProgress goals={data.goals} average={data.stats?.goalAverageProgress} loading={loading} onComplete={onGoalComplete} /><DailyTodo data={data} /></div>
           <div className="mt-5 grid gap-5 lg:grid-cols-2"><CalendarList date={data.date} events={data.calendarEvents} /><TasksList lists={data.taskLists ?? []} tasks={data.tasks} loading={loading} onAction={onTaskAction} /></div>
           <div className="mt-5 grid gap-5 lg:grid-cols-2"><RemindersList reminders={data.reminders} loading={loading} onAction={onReminderAction} /><MemoryList memories={data.memories} /></div>
