@@ -23,7 +23,7 @@ required_environment_variables:
 
 ## When To Use
 
-Use this skill when Tiago asks to manage goals, view/sync the dashboard overview, or process dashboard task/reminder actions.
+Use this skill when Tiago asks to manage goals, view/sync the dashboard overview, process dashboard task/reminder actions, or when the prompt is `sync-exec-assistant-dashboard-next-7-days-and-process-actions`.
 
 Hermes remains the source of truth for WhatsApp, reminders, saved memories, Google Calendar, Google Tasks, scheduling, and proactive automations. Exec Assistant is a companion API for goals, dashboard snapshots, and dashboard action handoff.
 
@@ -114,7 +114,19 @@ curl -s -X PATCH "$EXEC_ASSISTANT_URL/api/tools/dashboard/actions/<action-id>" \
 
 ### Dashboard Snapshot Sync
 
-After listing Calendar, Tasks, reminders, or useful memory highlights through Hermes-native tools, sync today's dashboard snapshot. Exec Assistant stores these as display/cache data only; Hermes remains the owner.
+After listing Calendar, Tasks, reminders, or useful memory highlights through Hermes-native tools, sync dashboard snapshots. Exec Assistant stores these as display/cache data only; Hermes remains the owner.
+
+For `sync-exec-assistant-dashboard-next-7-days-and-process-actions`, do this automatically without chatting with Tiago:
+
+1. Use Hermes-native Google Calendar, Google Tasks, reminders, and memory tools.
+2. Build one snapshot per date for today and the next 7 days.
+3. POST each date separately to `/api/tools/dashboard/snapshot` with the relevant `calendarEvents`, `tasks`/`taskLists`, `reminders`, `memories`, and `notes`.
+4. Fetch `/api/tools/dashboard/actions` and process pending actions using Hermes-native task/reminder tools.
+5. PATCH each processed action as `completed` or `failed`.
+
+### Dashboard Snapshot Sync API
+
+After listing Calendar, Tasks, reminders, or useful memory highlights through Hermes-native tools, sync a dashboard snapshot.
 
 Flat payload:
 
