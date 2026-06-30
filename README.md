@@ -18,6 +18,7 @@ Hermes handles the agent runtime, WhatsApp gateway, LLM provider, memory loop, s
 - Hermes owns WhatsApp/chat delivery, reminders, saved memories, scheduled jobs, Google Calendar, Google Tasks, and proactive automations.
 - Exec Assistant owns goals, dashboard snapshots, and overview aggregation.
 - Hermes pushes dashboard snapshots containing calendar events, tasks, reminders, memory highlights, and notes.
+- Exec Assistant can queue dashboard task/reminder actions; Hermes applies them through native Google/reminder tools and marks them processed.
 - Prefer Hermes-native workflows over adding companion endpoints whenever Hermes can do the job directly.
 
 ## First Deploy
@@ -64,7 +65,7 @@ hermes skills install tiagovicente2/exec-assistant/skills/exec-assistant --force
 
 Or copy `skills/exec-assistant/SKILL.md` into `~/.hermes/skills/exec-assistant/SKILL.md` inside the Hermes home volume.
 
-Core endpoints are under `/api/tools` and require `Authorization: Bearer <HERMES_TOOL_TOKEN>`. Use them for companion goals and dashboard snapshots, not for Hermes-native capabilities like memories, reminders, or Google Workspace actions.
+Core endpoints are under `/api/tools` and require `Authorization: Bearer <HERMES_TOOL_TOKEN>`. Use them for companion goals, dashboard snapshots, and dashboard action handoff. Apply task/reminder actions in Hermes-native systems, then acknowledge them in Exec Assistant.
 
 ## Dashboard
 
@@ -81,9 +82,9 @@ The dashboard shows:
 - Goals progress
 - Today's highlights
 - Calendar summary
-- Google Tasks
-- Hermes reminders due today
-- Hermes memory highlights
+- Tasks with done/remove actions
+- Reminders due today with done/remove actions
+- Memory highlights
 
 ## Notes
 

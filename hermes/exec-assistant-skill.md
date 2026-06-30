@@ -23,16 +23,17 @@ required_environment_variables:
 
 ## When To Use
 
-Use this skill when Tiago asks to manage goals or view/sync the dashboard overview.
+Use this skill when Tiago asks to manage goals, view/sync the dashboard overview, or process dashboard task/reminder actions.
 
-Hermes remains the source of truth for WhatsApp, reminders, saved memories, Google Calendar, Google Tasks, scheduling, and proactive automations. Exec Assistant is a companion API for goals and dashboard snapshots.
+Hermes remains the source of truth for WhatsApp, reminders, saved memories, Google Calendar, Google Tasks, scheduling, and proactive automations. Exec Assistant is a companion API for goals, dashboard snapshots, and dashboard action handoff.
 
 ## Rules
 
-- Use Exec Assistant for goals and dashboard snapshots only.
+- Use Exec Assistant for goals, dashboard snapshots, and dashboard action handoff only.
 - Use Hermes-native memory for preferences/facts; do not write memories to Exec Assistant.
 - Use Hermes scheduled tasks/cron for reminders; do not create reminders in Exec Assistant.
 - Use Hermes Google Workspace for Calendar and Tasks. Google commands should use `$GAPI ...`, not the Exec Assistant API.
+- When Exec Assistant queues a task/reminder action, apply it through Hermes-native tools, then mark the action completed or failed.
 - Use `America/Sao_Paulo` as the default timezone.
 - Send timestamps as ISO 8601 strings with timezone offsets.
 - Ask a clarifying question before ambiguous calendar/task/reminder actions.
@@ -80,6 +81,35 @@ curl -s -X PATCH "$EXEC_ASSISTANT_URL/api/tools/goals/<goal-id>" \
   -H "Authorization: Bearer $EXEC_ASSISTANT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"progress":50}'
+```
+
+### Dashboard Action Handoff
+
+The dashboard can queue `done` or `remove` actions for displayed tasks/reminders. Fetch pending actions, apply each action through Hermes-native Google Tasks or reminder tools, then acknowledge the action.
+
+List pending actions:
+
+```bash
+curl -s "$EXEC_ASSISTANT_URL/api/tools/dashboard/actions" \
+  -H "Authorization: Bearer $EXEC_ASSISTANT_TOKEN"
+```
+
+Mark completed:
+
+```bash
+curl -s -X PATCH "$EXEC_ASSISTANT_URL/api/tools/dashboard/actions/<action-id>" \
+  -H "Authorization: Bearer $EXEC_ASSISTANT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status":"completed"}'
+```
+
+Mark failed:
+
+```bash
+curl -s -X PATCH "$EXEC_ASSISTANT_URL/api/tools/dashboard/actions/<action-id>" \
+  -H "Authorization: Bearer $EXEC_ASSISTANT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status":"failed","errorMessage":"Could not find matching task"}'
 ```
 
 ### Dashboard Snapshot Sync

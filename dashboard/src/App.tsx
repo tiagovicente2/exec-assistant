@@ -26,10 +26,11 @@ type CalendarEvent = {
 
 type Task = {
   id?: string;
+  path?: string;
   title?: string;
   due?: string;
   status?: string;
-  completed?: string;
+  completed?: string | boolean;
 };
 
 type MemoryHighlight = {
@@ -69,6 +70,7 @@ function App() {
   const [token, setToken] = useState(storedToken());
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function loadDashboard(currentToken: string) {
@@ -92,9 +94,10 @@ function App() {
   }
 
   async function runAction(method: string, url: string, body?: unknown) {
-    if (!token) return;
+    if (!token) return false;
     setLoading(true);
     setError(null);
+    setActionNotice(null);
     try {
       const response = await fetch(url, {
         method,
@@ -103,10 +106,24 @@ function App() {
       });
       if (!response.ok) throw new Error(await response.text());
       await loadDashboard(token);
+      return true;
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Action failed");
       setLoading(false);
+      return false;
     }
+  }
+
+  async function queueItemAction(targetType: "task" | "reminder", action: "done" | "remove", item: Task | Reminder) {
+    const title = "title" in item ? item.title : item.message;
+    const ok = await runAction("POST", "/api/dashboard/actions", {
+      targetType,
+      action,
+      targetId: item.id,
+      targetPath: "path" in item ? item.path : undefined,
+      title
+    });
+    if (ok) setActionNotice(`${targetType === "task" ? "Task" : "Reminder"} ${action === "done" ? "done" : "remove"} action queued.`);
   }
 
   useEffect(() => {
@@ -146,10 +163,11 @@ function App() {
           <h1>Today's command center</h1>
           <p>{data ? `${data.date} · ${data.timezone}` : "Loading your day..."}</p>
         </div>
-        <div className="connect passive">Google via Hermes</div>
+
       </header>
 
       {loading && <div className="notice">Loading dashboard...</div>}
+      {actionNotice && <div className="notice success">{actionNotice}</div>}
       {error && <div className="notice error">{error}</div>}
       {data?.google.error && <div className="notice error">Google: {data.google.error}</div>}
 
@@ -161,7 +179,7 @@ function App() {
             ))}
           </section>
 
-          {data.google.syncedAt && <div className="notice">Calendar/tasks synced by Hermes at {new Date(data.google.syncedAt).toLocaleString()}</div>}
+          {data.google.syncedAt && <div className="notice">Synced at {new Date(data.google.syncedAt).toLocaleString()}</div>}
           {data.notes && <div className="notice">{data.notes}</div>}
 
           <section className="grid">
@@ -171,7 +189,7 @@ function App() {
                 <span>{data.goals.length} active</span>
               </div>
               <div className="goal-list">
-                {data.goals.length === 0 && <p className="muted">No active goals yet. Ask Hermes to create one from WhatsApp.</p>}
+                {data.goals.length === 0 && <p className="muted">No active goals yet.</p>}
                 {data.goals.map((goal) => (
                   <div className="goal" key={goal.id}>
                     <div className="goal-row">
@@ -200,31 +218,37 @@ function App() {
             </article>
 
             <article className="panel">
-              <div className="panel-title"><h2>Tasks</h2><span>Google Tasks</span></div>
+              <div className="panel-title"><h2>Tasks</h2><span>{data.tasks.length} open</span></div>
               {data.tasks.length === 0 && <p className="muted">No open tasks found.</p>}
               {data.tasks.map((task) => (
-                <div className="line-item" key={task.id ?? task.title}>
+                <div className="line-item" key={task.id ?? task.path ?? task.title}>
                   <span>{task.title ?? "Untitled task"}</span>
                   {task.due && <time>{new Date(task.due).toLocaleDateString()}</time>}
-                  <span className="muted">Manage in Hermes/Google Tasks</span>
+                  <div className="actions compact">
+                    <button disabled={loading} onClick={() => void queueItemAction("task", "done", task)}>Done</button>
+                    <button className="secondary" disabled={loading} onClick={() => void queueItemAction("task", "remove", task)}>Remove</button>
+                  </div>
                 </div>
               ))}
             </article>
 
             <article className="panel wide">
-              <div className="panel-title"><h2>Reminders</h2><span>Hermes owned</span></div>
+              <div className="panel-title"><h2>Reminders</h2><span>{data.reminders.length} due</span></div>
               {data.reminders.length === 0 && <p className="muted">No reminders due today.</p>}
               {data.reminders.map((reminder) => (
                 <div className="line-item" key={reminder.id}>
                   <time>{formatTime(reminder.remind_at)}</time>
                   <span>{reminder.message}</span>
-                  <span className="muted">Manage in Hermes</span>
+                  <div className="actions compact">
+                    <button disabled={loading} onClick={() => void queueItemAction("reminder", "done", reminder)}>Done</button>
+                    <button className="secondary" disabled={loading} onClick={() => void queueItemAction("reminder", "remove", reminder)}>Remove</button>
+                  </div>
                 </div>
               ))}
             </article>
 
             <article className="panel wide">
-              <div className="panel-title"><h2>Memory Highlights</h2><span>Hermes owned</span></div>
+              <div className="panel-title"><h2>Memory Highlights</h2><span>{data.memories.length} saved</span></div>
               {data.memories.length === 0 && <p className="muted">No memory highlights synced.</p>}
               {data.memories.map((memory, index) => (
                 <div className="line-item" key={memory.id ?? `${memory.kind ?? "memory"}-${index}`}>

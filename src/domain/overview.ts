@@ -1,5 +1,6 @@
 import { DateTime } from "luxon";
 import { config } from "../config.js";
+import { listDashboardActions } from "./dashboardActions.js";
 import { listGoals } from "./goals.js";
 import { getTodaySnapshot } from "./dashboardSnapshot.js";
 
@@ -143,6 +144,30 @@ function normalizeReminder(reminder: unknown, index: number): NormalizedReminder
   };
 }
 
+function actionMetadata(action: JsonRecord) {
+  return isRecord(action.metadata) ? action.metadata : {};
+}
+
+function actionTargetId(action: JsonRecord) {
+  return stringValue(action.target_id) ?? stringValue(actionMetadata(action).targetId);
+}
+
+function actionTargetPath(action: JsonRecord) {
+  return stringValue(actionMetadata(action).targetPath);
+}
+
+function isQueuedFor(action: JsonRecord, targetType: "task" | "reminder", item: { id?: string; path?: string }) {
+  const actionType = stringValue(action.target_type) ?? stringValue(action.targetType);
+  if (actionType !== targetType) return false;
+  const targetId = actionTargetId(action);
+  const targetPath = actionTargetPath(action);
+  return (!!item.id && targetId === item.id) || (!!item.path && (targetPath === item.path || targetId === item.path));
+}
+
+function filterQueuedActions<T extends { id?: string; path?: string }>(items: T[], actions: JsonRecord[], targetType: "task" | "reminder") {
+  return items.filter((item) => !actions.some((action) => isQueuedFor(action, targetType, item)));
+}
+
 function normalizeReminders(rawReminders: unknown[], now: DateTime) {
   return rawReminders
     .map((reminder, index) => normalizeReminder(reminder, index))
@@ -156,13 +181,14 @@ function normalizeReminders(rawReminders: unknown[], now: DateTime) {
 
 export async function todayOverview() {
   const now = DateTime.now().setZone(config.DEFAULT_TIMEZONE);
-  const [goals, snapshot] = await Promise.all([listGoals("active"), getTodaySnapshot()]);
-  const dueReminders = normalizeReminders((snapshot?.reminders as unknown[] | null) ?? [], now);
+  const [goals, snapshot, pendingActions] = await Promise.all([listGoals("active"), getTodaySnapshot(), listDashboardActions("pending")]);
+  const queuedActions = pendingActions.filter(isRecord);
+  const dueReminders = filterQueuedActions(normalizeReminders((snapshot?.reminders as unknown[] | null) ?? [], now), queuedActions, "reminder");
   const calendars = normalizeCalendars((snapshot?.calendar_events as unknown[] | null) ?? []);
   const calendarEvents = calendars.flatMap((calendar) => calendar.events);
   const taskLists = normalizeTaskLists((snapshot?.tasks as unknown[] | null) ?? []);
   const allTasks = taskLists.flatMap((list) => list.tasks);
-  const tasks = allTasks.filter((task) => !task.completed);
+  const tasks = filterQueuedActions(allTasks.filter((task) => !task.completed), queuedActions, "task");
   const completedTasks = allTasks.filter((task) => task.completed);
   const overdueTasks = tasks.filter((task) => {
     const due = taskDueDate(task);
@@ -178,7 +204,7 @@ export async function todayOverview() {
   const highlights = [
     `${calendarEvents.length} event${calendarEvents.length === 1 ? "" : "s"} across ${calendars.length} calendar${calendars.length === 1 ? "" : "s"}`,
     `${tasks.length} open task${tasks.length === 1 ? "" : "s"} across ${taskLists.length} list${taskLists.length === 1 ? "" : "s"}`,
-    `${dueReminders.length} Hermes reminder${dueReminders.length === 1 ? "" : "s"} due today`,
+    `${dueReminders.length} reminder${dueReminders.length === 1 ? "" : "s"} due today`,
     `${goalAverageProgress}% average goal progress`
   ];
 

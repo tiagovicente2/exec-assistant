@@ -1,6 +1,7 @@
 import express from "express";
 import { z } from "zod";
 import { config } from "../config.js";
+import { createDashboardAction, listDashboardActions, updateDashboardAction } from "../domain/dashboardActions.js";
 import { createGoal, listGoals, updateGoal } from "../domain/goals.js";
 import { todayOverview } from "../domain/overview.js";
 import { upsertDashboardSnapshot } from "../domain/dashboardSnapshot.js";
@@ -24,6 +25,21 @@ router.patch("/api/dashboard/goals/:id", requireDashboardToken, async (req, res,
   try {
     const body = z.object({ status: z.string().optional(), progress: z.number().min(0).max(100).optional() }).parse(req.body);
     res.json(await updateGoal({ id: req.params.id, ...body }));
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/api/dashboard/actions", requireDashboardToken, async (req, res, next) => {
+  try {
+    const body = z.object({
+      targetType: z.enum(["task", "reminder"]),
+      action: z.enum(["done", "remove"]),
+      targetId: z.string().optional(),
+      targetPath: z.string().optional(),
+      title: z.string().optional()
+    }).parse(req.body);
+    res.status(201).json(await createDashboardAction(body));
   } catch (error) {
     next(error);
   }
@@ -61,6 +77,24 @@ tools.patch("/goals/:id", async (req, res, next) => {
   try {
     const body = z.object({ title: z.string().optional(), description: z.string().optional(), status: z.string().optional(), targetDate: z.string().optional(), progress: z.number().min(0).max(100).optional() }).parse(req.body);
     res.json(await updateGoal({ id: req.params.id, ...body }));
+  } catch (error) {
+    next(error);
+  }
+});
+
+tools.get("/dashboard/actions", async (req, res, next) => {
+  try {
+    const status = z.enum(["pending", "completed", "failed"]).optional().parse(req.query.status);
+    res.json(await listDashboardActions(status));
+  } catch (error) {
+    next(error);
+  }
+});
+
+tools.patch("/dashboard/actions/:id", async (req, res, next) => {
+  try {
+    const body = z.object({ status: z.enum(["pending", "completed", "failed"]), errorMessage: z.string().nullable().optional() }).parse(req.body);
+    res.json(await updateDashboardAction({ id: req.params.id, ...body }));
   } catch (error) {
     next(error);
   }

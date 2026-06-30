@@ -126,6 +126,7 @@ button.secondary { background: #efe5c9; }
   border-radius: 18px;
   padding: 14px 16px;
 }
+.success { color: #2d5c24; background: #e8f5dc; }
 .error { color: #8a1f17; background: #ffe8df; }
 
 .login-shell {
