@@ -1,7 +1,7 @@
 ---
 name: exec-assistant
 description: Manage Tiago's goals and sync Hermes-owned dashboard data into Exec Assistant.
-version: 1.1.0
+version: 1.1.1
 platforms: [linux]
 metadata:
   hermes:
@@ -134,9 +134,36 @@ For `sync-exec-assistant-dashboard-next-7-days-and-process-actions`, do this aut
 
 1. Use Hermes-native Google Calendar, Google Tasks, reminders, and memory tools.
 2. Build one snapshot per date for today and the next 7 days.
-3. POST each date separately to `/api/tools/dashboard/snapshot` with the relevant `calendarEvents`, `tasks`/`taskLists`, `reminders`, `memories`, `aiOverview`, and `notes`.
-4. Fetch `/api/tools/dashboard/actions` and process pending actions using Hermes-native task/reminder tools.
-5. PATCH each processed action as `completed` or `failed`.
+3. Generate a real `aiOverview` for each date using the AI Overview Prompt below.
+4. POST each date separately to `/api/tools/dashboard/snapshot` with the relevant `calendarEvents`, `tasks`/`taskLists`, `reminders`, `memories`, `aiOverview`, and `notes`.
+5. Fetch `/api/tools/dashboard/actions` and process pending actions using Hermes-native task/reminder tools.
+6. PATCH each processed action as `completed` or `failed`.
+
+### AI Overview Prompt
+
+For every dashboard snapshot, create a useful `aiOverview`; never send a generic count-only sentence like "Hermes synced X calendar event(s)...". The overview should help Tiago decide what to do next.
+
+Use the day's Calendar events, Google Tasks, due reminders, active goals, and relevant memory highlights. If data is sparse, still provide a concise planning overview from what is available.
+
+Return this exact shape:
+
+```json
+{
+  "summary": "2-3 sentences with the day's main theme, highest-priority commitments, and what Tiago should protect or focus on.",
+  "highlights": ["1-3 concrete positives or anchors from the day"],
+  "improvements": ["1-3 concrete risks, bottlenecks, overdue items, conflicts, or decisions needed"],
+  "continue": ["1-3 concrete next actions, habits, or plans to keep"],
+  "updatedAt": "current ISO timestamp with timezone offset"
+}
+```
+
+Guidelines:
+
+- Be specific: mention task/event titles when useful.
+- Keep each bullet short and action-oriented.
+- Prefer insight over counts; counts can support the summary but should not be the whole overview.
+- If there are no events/tasks/reminders, say the day is open and suggest one planning action.
+- Do not mention implementation details, tokens, APIs, or that data was synced.
 
 ### Dashboard Snapshot Sync API
 
