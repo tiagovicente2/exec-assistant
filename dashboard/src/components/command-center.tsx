@@ -118,6 +118,14 @@ function formatTime(value?: string | null) {
   return new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 }
 
+function formatSyncWindow(syncedAt?: string | null, timezone = "America/Sao_Paulo") {
+  if (!syncedAt) return "Not synced";
+  const start = new Date(syncedAt);
+  const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const formatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: timezone });
+  return `${formatter.format(start)} – ${formatter.format(end)}`;
+}
+
 function eventStart(event: CalendarEvent) {
   return event.startValue ?? event.start?.dateTime ?? event.start?.date;
 }
@@ -376,7 +384,7 @@ function SyncInfoModal({ data, open, onClose }: { data: DashboardData | null; op
         </div>
         <dl className="space-y-3 text-sm">
           <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Last sync</dt><dd className="font-medium text-foreground">{data?.google.syncedAt ? new Date(data.google.syncedAt).toLocaleString("pt-BR") : "Not synced"}</dd></div>
-          <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Window</dt><dd className="font-medium text-foreground">{data?.date ? formatDate(data.date) : "Selected day"}</dd></div>
+          <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Window</dt><dd className="font-medium text-foreground">{formatSyncWindow(data?.google.syncedAt, data?.timezone)}</dd></div>
           <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Timezone</dt><dd className="font-medium text-foreground">{data?.timezone ?? "America/Sao_Paulo"}</dd></div>
           <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Events</dt><dd className="font-medium text-foreground">{data?.calendarEvents.length ?? 0}</dd></div>
           <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Open tasks</dt><dd className="font-medium text-foreground">{data?.tasks.length ?? 0}</dd></div>
