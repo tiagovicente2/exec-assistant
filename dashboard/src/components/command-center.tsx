@@ -376,7 +376,7 @@ function SyncInfoModal({ data, open, onClose }: { data: DashboardData | null; op
         </div>
         <dl className="space-y-3 text-sm">
           <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Last sync</dt><dd className="font-medium text-foreground">{data?.google.syncedAt ? new Date(data.google.syncedAt).toLocaleString("pt-BR") : "Not synced"}</dd></div>
-          <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Window</dt><dd className="font-medium text-foreground">Selected day</dd></div>
+          <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Window</dt><dd className="font-medium text-foreground">{data?.date ? formatDate(data.date) : "Selected day"}</dd></div>
           <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Timezone</dt><dd className="font-medium text-foreground">{data?.timezone ?? "America/Sao_Paulo"}</dd></div>
           <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Events</dt><dd className="font-medium text-foreground">{data?.calendarEvents.length ?? 0}</dd></div>
           <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Open tasks</dt><dd className="font-medium text-foreground">{data?.tasks.length ?? 0}</dd></div>
