@@ -11,8 +11,15 @@ function storedToken() {
   return localStorage.getItem("exec-dashboard-token") ?? "";
 }
 
-function isoDate(date = new Date()) {
-  return date.toISOString().slice(0, 10);
+function isoDate(date = new Date(), timeZone = "America/Sao_Paulo") {
+  const parts = new Intl.DateTimeFormat("en", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone
+  }).formatToParts(date);
+  const value = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
+  return `${value("year")}-${value("month")}-${value("day")}`;
 }
 
 function Login({ error, onToken }: { error: string | null; onToken: (value: string) => void }) {
